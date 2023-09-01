@@ -13,16 +13,16 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-type ClickhouseDriver struct {
+type DatabendDriver struct {
 	sqlds.Driver
 }
 
 type MockDB struct {
-	ClickhouseDriver
+	DatabendDriver
 }
 
-func (h *ClickhouseDriver) Macros() sqlds.Macros {
-	var C = plugin.Clickhouse{}
+func (h *DatabendDriver) Macros() sqlds.Macros {
+	var C = plugin.Databend{}
 
 	return C.Macros()
 }

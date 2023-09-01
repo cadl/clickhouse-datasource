@@ -46,7 +46,7 @@ export const isDateType = (type: string): boolean => {
 };
 export const isDateTimeType = (type: string): boolean => {
   const normalizedName = type?.toLowerCase();
-  return normalizedName?.startsWith('datetime') || normalizedName?.startsWith('nullable(datetime');
+  return normalizedName?.startsWith('datetime') || normalizedName?.startsWith('nullable(datetime') || normalizedName?.startsWith('timestamp');
 };
 export const isStringType = (type: string): boolean => {
   return !(isBooleanType(type) || isNumberType(type) || isDateType(type));

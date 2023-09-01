@@ -374,12 +374,13 @@ export class Datasource
   }
 
   async fetchFields(database: string, table: string): Promise<string[]> {
-    return this.fetchData(`DESC TABLE "${database}"."${table}"`);
+    const res = this.fetchData(`DESC "${database}"."${table}"`);
+    return res;
   }
 
   async fetchFieldsFull(database: string | undefined, table: string): Promise<FullField[]> {
     const prefix = Boolean(database) ? `"${database}".` : '';
-    const rawSql = `DESC TABLE ${prefix}"${table}"`;
+    const rawSql = `DESC ${prefix}"${table}"`;
     const frame = await this.runQuery({ rawSql });
     if (frame.fields?.length === 0) {
       return [];
