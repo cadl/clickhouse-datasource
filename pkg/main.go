@@ -19,6 +19,6 @@ func main() {
 }
 
 func newDatasource(settings backend.DataSourceInstanceSettings) (instancemgmt.Instance, error) {
-	ds := sqlds.NewDatasource(&plugin.Clickhouse{})
+	ds := sqlds.NewDatasource(&plugin.Databend{})
 	return ds.NewDatasource(settings)
 }
