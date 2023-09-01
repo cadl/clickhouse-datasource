@@ -26,7 +26,7 @@ func newTimeFilter(queryType timeQueryType, query *sqlds.Query) (string, error) 
 	if queryType == timeQueryTypeTo {
 		date = query.TimeRange.To
 	}
-	return fmt.Sprintf("TO_TIMESTAMP(%d // 1000)", date.UnixMilli()), nil
+	return fmt.Sprintf("TO_TIMESTAMP(%d)", date.Unix()), nil
 }
 
 // FromTimeFilter return time filter query based on grafana's timepicker's from time
@@ -93,11 +93,7 @@ func TimeIntervalMs(query *sqlds.Query, args []string) (string, error) {
 	if len(args) != 1 {
 		return "", fmt.Errorf("%w: expected 1 argument, received %d", sqlds.ErrorBadArgumentCount, len(args))
 	}
-
-	// milliseconds := math.Max(float64(query.Interval.Milliseconds()), 1)
-	// return fmt.Sprintf("toStartOfInterval(toDateTime64(%s, 3), INTERVAL %d millisecond)", args[0], int(milliseconds)), nil
 	return TimeInterval(query, args)
-
 }
 
 func IntervalSeconds(query *sqlds.Query, args []string) (string, error) {

@@ -17,7 +17,6 @@ import {
 import { from, isObservable, Observable } from 'rxjs';
 import { config } from '@grafana/runtime';
 import { colors } from '@grafana/ui';
-import { partition } from 'lodash';
 
 /**
  * Partially copy-pasted and adjusted to ClickHouse server-side aggregations
@@ -125,7 +124,9 @@ export function aggregateRawLogsVolume(rawLogsVolume: DataFrame[]): DataFrame[] 
     return []; // we always expect a single DataFrame with all the aggregations from ClickHouse
   }
 
-  const [[timeField], levelFields] = partition(rawLogsVolume[0].fields, (f) => f.name === TIME_FIELD_ALIAS);
+  const timeField = rawLogsVolume[0].fields[rawLogsVolume[0].fields.length - 1];
+  const levelFields = rawLogsVolume[0].fields.slice(0, -1);
+
   if (timeField === undefined) {
     return []; // should never happen if we have a DataFrame available
   }
@@ -206,20 +207,20 @@ export function getTimeFieldRoundingClause(scopedVars: ScopedVars, timeField: st
   // NB: slight discrepancy with getIntervalInfo here
   // it returns { interval: '$__interval' } when the interval from the ScopedVars is undefined,
   // but we fall back to DAY here
-  let interval = 'DAY';
+  let startOfFunc = 'TO_START_OF_DAY';
   if (scopedVars.__interval_ms) {
-    let intervalMs: number = scopedVars.__interval_ms.value;
-    if (intervalMs > HOUR) {
-      interval = 'DAY';
-    } else if (intervalMs > MINUTE) {
-      interval = 'HOUR';
-    } else if (intervalMs > SECOND) {
-      interval = 'MINUTE';
+    let _intervalMs: number = scopedVars.__interval_ms.value;
+    if (_intervalMs > HOUR) {
+      startOfFunc = 'TO_START_OF_DAY';
+    } else if (_intervalMs > MINUTE) {
+      startOfFunc = 'TO_START_OF_HOUR';
+    } else if (_intervalMs > SECOND) {
+      startOfFunc = 'TO_START_OF_MINUTE';
     } else {
-      interval = 'SECOND';
+      startOfFunc = 'TO_START_OF_SECOND';
     }
   }
-  return `toStartOfInterval("${timeField}", INTERVAL 1 ${interval})`;
+  return `${startOfFunc}(cast(${timeField} as TIMESTAMP))`;
 }
 
 export const TIME_FIELD_ALIAS = 'time';

@@ -38,7 +38,7 @@ import {
   getTimeFieldRoundingClause,
   LOG_LEVEL_TO_IN_CLAUSE,
   queryLogsVolume,
-  TIME_FIELD_ALIAS,
+  // TIME_FIELD_ALIAS,
 } from './logs';
 import { getSQLFromQueryOptions } from '../components/queryBuilder/utils';
 
@@ -94,7 +94,6 @@ export class Datasource
         if (!targets.length) {
           return undefined;
         }
-
         return queryLogsVolume(
           this,
           { ...logsVolumeRequest, targets },
@@ -134,10 +133,9 @@ export class Datasource
     if (query.builderOptions.logLevelField) {
       // Generate "fields" like
       // sum(toString("log_level") IN ('dbug', 'debug', 'DBUG', 'DEBUG', 'Dbug', 'Debug')) AS debug
-      const llf = `toString("${query.builderOptions.logLevelField}")`;
       let level: keyof typeof LOG_LEVEL_TO_IN_CLAUSE;
       for (level in LOG_LEVEL_TO_IN_CLAUSE) {
-        fields.push(`sum(${llf} ${LOG_LEVEL_TO_IN_CLAUSE[level]}) AS ${level}`);
+        fields.push(`sum(CASE WHEN ${query.builderOptions.logLevelField} ${LOG_LEVEL_TO_IN_CLAUSE[level]} THEN 1 ELSE 0 END) AS ${level}`);
       }
     } else {
       metrics.push({
@@ -154,10 +152,10 @@ export class Datasource
       filters: query.builderOptions.filters,
       fields,
       metrics,
-      groupBy: [`${timeFieldRoundingClause} AS ${TIME_FIELD_ALIAS}`],
+      groupBy: [`${timeFieldRoundingClause}`],
       orderBy: [
         {
-          name: TIME_FIELD_ALIAS,
+          name: `${timeFieldRoundingClause}`,
           dir: OrderByDirection.ASC,
         },
       ],
