@@ -2,6 +2,14 @@
   "version": "0.2.0",
   "configurations": [
     {
+      "name": "Attach to Process",
+      "type": "go",
+      "request": "attach",
+      "mode": "local",
+      "processId": 0,
+      "debugAdapter": "dlv-dap"
+    },
+    {
       "name": "Run standalone plugin",
       "type": "go",
       "request": "launch",

@@ -2,23 +2,19 @@ package plugin
 
 import (
 	"context"
-	"crypto/tls"
-	"crypto/x509"
 	"database/sql"
 	"encoding/json"
 	"fmt"
-	"os"
 	"strconv"
 	"strings"
 	"time"
 
-	"github.com/go-sql-driver/mysql"
+	godatabend "github.com/databendcloud/databend-go"
 
 	"github.com/grafana/clickhouse-datasource/pkg/converters"
 	"github.com/grafana/clickhouse-datasource/pkg/macros"
 	"github.com/grafana/grafana-plugin-sdk-go/backend"
 	"github.com/grafana/grafana-plugin-sdk-go/backend/log"
-	"github.com/grafana/grafana-plugin-sdk-go/build"
 	"github.com/grafana/grafana-plugin-sdk-go/data"
 	"github.com/grafana/grafana-plugin-sdk-go/data/sqlutil"
 	"github.com/grafana/sqlds/v2"
@@ -70,27 +66,40 @@ func (d *Databend) Connect(config backend.DataSourceInstanceSettings, message js
 	// 	}
 	// }
 
-	cfg := mysql.Config{
-		User:                 settings.Username,
-		Passwd:               settings.Password,
-		Net:                  "tcp",
-		Addr:                 fmt.Sprintf("%s:%d", settings.Server, settings.Port),
-		DBName:               settings.DefaultDatabase,
-		Timeout:              time.Duration(t) * time.Second,
-		ReadTimeout:          time.Duration(qt) * time.Second,
-		AllowNativePasswords: true,
-		Collation:            "utf8mb4_general_ci",
-		ParseTime:            true,
-		Loc:                  time.Local,
-		Params: map[string]string{
-			"timezone": "'Asia/Shanghai'",
-		},
-		// TLS:         tlsConfig,
+	// cfg := mysql.Config{
+	// 	User:                 settings.Username,
+	// 	Passwd:               settings.Password,
+	// 	Net:                  "tcp",
+	// 	Addr:                 fmt.Sprintf("%s:%d", settings.Server, settings.Port),
+	// 	DBName:               settings.DefaultDatabase,
+	// 	Timeout:              time.Duration(t) * time.Second,
+	// 	ReadTimeout:          time.Duration(qt) * time.Second,
+	// 	AllowNativePasswords: true,
+	// 	Collation:            "utf8mb4_general_ci",
+	// 	ParseTime:            true,
+	// 	Loc:                  time.Local,
+	// 	Params: map[string]string{
+	// 		"timezone": "'Asia/Shanghai'",
+	// 	},
+	// 	// TLS:         tlsConfig,
+	// }
+
+	// connector, err := mysql.NewConnector(&cfg)
+	cfg := godatabend.Config{
+		Host:         fmt.Sprintf("%s:%d", settings.Server, settings.Port),
+		User:         settings.Username,
+		Password:     settings.Password,
+		Database:     settings.DefaultDatabase,
+		SSLMode:      godatabend.SSL_MODE_DISABLE,
+		Timeout:      time.Duration(t) * time.Second,
+		WaitTimeSecs: int64(qt),
+		Location:     time.Local,
 	}
 
-	connector, err := mysql.NewConnector(&cfg)
-
-	db := sql.OpenDB(connector)
+	db, err := sql.Open("databend", cfg.FormatDSN())
+	if err != nil {
+		return nil, err
+	}
 
 	timeout := time.Duration(t)
 	ctx, cancel := context.WithTimeout(context.Background(), timeout*time.Second)
@@ -152,103 +161,152 @@ func (d *Databend) Settings(config backend.DataSourceInstanceSettings) sqlds.Dri
 }
 
 func (d *Databend) MutateQuery(ctx context.Context, req backend.DataQuery) (context.Context, backend.DataQuery) {
-	// var dataQuery struct {
-	// 	Meta struct {
-	// 		TimeZone string `json:"timezone"`
-	// 	} `json:"meta"`
-	// 	Format int `json:"format"`
-	// }
-
-	// if err := json.Unmarshal(req.JSON, &dataQuery); err != nil {
-	// 	return ctx, req
-	// }
-
-	// if dataQuery.Meta.TimeZone == "" {
-	// 	return ctx, req
-	// }
-
-	// loc, _ := time.LoadLocation(dataQuery.Meta.TimeZone)
-	// return clickhouse.Context(ctx, clickhouse.WithUserLocation(loc)), req
 	return ctx, req
 }
 
-func (d *Databend) MutateResponse(ctx context.Context, res data.Frames) (data.Frames, error) {
-	for _, frame := range res {
-		log.DefaultLogger.Debug("frame.Meta.PreferredVisualization", "frame.Meta.PreferredVisualization", frame.Meta.PreferredVisualization)
-		if frame.Meta.PreferredVisualization != data.VisType(data.VisTypeTrace) &&
-			frame.Meta.PreferredVisualization != data.VisType(data.VisTypeTable) {
-			var fields []*data.Field
-			for _, field := range frame.Fields {
-				values := make([]*string, field.Len())
-				if field.Type() == data.FieldTypeNullableJSON {
-					newField := data.NewField(field.Name, field.Labels, values)
-					newField.SetConfig(field.Config)
-					for i := 0; i < field.Len(); i++ {
-						val := field.At(i).(*json.RawMessage)
-						if val == nil {
-							newField.Set(i, nil)
-						} else {
-							bytes, err := val.MarshalJSON()
-							if err != nil {
-								return res, err
-							}
-							sVal := string(bytes)
-							newField.Set(i, &sVal)
-						}
-					}
-					fields = append(fields, newField)
-				} else {
-					fields = append(fields, field)
-				}
-			}
-			frame.Fields = fields
-		}
-	}
-	return res, nil
+type MapField struct {
+	dfField *data.Field
+	t       string
 }
 
-// getTLSConfig returns tlsConfig from settings
-// logic reused from https://github.com/grafana/grafana/blob/615c153b3a2e4d80cff263e67424af6edb992211/pkg/models/datasource_cache.go#L211
-func getTLSConfig(settings Settings) (*tls.Config, error) {
-	tlsConfig := &tls.Config{
-		InsecureSkipVerify: settings.InsecureSkipVerify,
-		ServerName:         settings.Server,
+func newMapField(name string, labels data.Labels, v interface{}) (*MapField, error) {
+	var newInitialValueSlice interface{}
+	var t string
+
+	switch ov := v.(type) {
+	case float64:
+		newInitialValueSlice = []*float64{&ov}
+		t = "number"
+	case string:
+		newInitialValueSlice = []*string{&ov}
+		t = "string"
+	case bool:
+		newInitialValueSlice = []*bool{&ov}
+		t = "bool"
+	case nil:
+		newInitialValueSlice = []*string{nil}
+		t = "string"
+	default:
+		return nil, errors.New(fmt.Sprintf("unknown type: %T", v))
 	}
-	if settings.TlsClientAuth || settings.TlsAuthWithCACert {
-		if settings.TlsAuthWithCACert && len(settings.TlsCACert) > 0 {
-			caPool := x509.NewCertPool()
-			if ok := caPool.AppendCertsFromPEM([]byte(settings.TlsCACert)); !ok {
-				return nil, ErrorInvalidCACertificate
-			}
-			tlsConfig.RootCAs = caPool
+
+	return &MapField{
+		dfField: data.NewField(name, labels, newInitialValueSlice),
+		t:       t,
+	}, nil
+}
+
+func (mf *MapField) convValue(value interface{}) interface{} {
+	switch mf.t {
+	case "number":
+		v, ok := value.(float64)
+		if !ok {
+			return nil
 		}
-		if settings.TlsClientAuth {
-			cert, err := tls.X509KeyPair([]byte(settings.TlsClientCert), []byte(settings.TlsClientKey))
+		return &v
+	case "string":
+		v, ok := value.(string)
+		if !ok {
+			return nil
+		}
+		return &v
+	case "bool":
+		v, ok := value.(bool)
+		if !ok {
+			return nil
+		}
+		return &v
+	default:
+		panic(fmt.Sprintf("unknown type: %s", mf.t))
+	}
+}
+
+func (mf *MapField) append(value interface{}) error {
+	if value == nil {
+		mf.dfField.Append(nil)
+		return nil
+	} else {
+		v := mf.convValue(value)
+		if v == nil {
+			mf.dfField.Append(nil)
+			return nil
+		}
+		mf.dfField.Append(v)
+		return nil
+	}
+}
+
+func flattenDFKvField(field *data.Field) ([]*data.Field, error) {
+	var newFields []*data.Field
+	firstRowKv := make(map[string]interface{})
+	firstRowRawMessage := field.At(0).(*json.RawMessage)
+	if firstRowRawMessage == nil {
+		return newFields, nil
+	}
+
+	err := json.Unmarshal(*firstRowRawMessage, &firstRowKv)
+	if err != nil {
+		return nil, err
+	}
+
+	mapFields := make(map[string]*MapField)
+
+	for k, v := range firstRowKv {
+		mapField, err := newMapField(fmt.Sprintf("%s['%s']", field.Name, k), field.Labels, v)
+		if err != nil {
+			return nil, err
+		}
+		mapFields[k] = mapField
+	}
+
+	for i := 1; i < field.Len(); i++ {
+		val := field.At(i).(*json.RawMessage)
+		if val == nil {
+			for _, v := range mapFields {
+				v.append(nil)
+			}
+		} else {
+			var rowValues map[string]interface{}
+			err := json.Unmarshal(*val, &rowValues)
 			if err != nil {
 				return nil, err
 			}
-			tlsConfig.Certificates = []tls.Certificate{cert}
+			for kField, vField := range mapFields {
+				vField.append(rowValues[kField])
+			}
 		}
 	}
-	return tlsConfig, nil
+	for _, v := range mapFields {
+		newFields = append(newFields, v.dfField)
+	}
+	return newFields, nil
 }
 
-func getClientInfoProducts() (products []struct{ Name, Version string }) {
-	if version := os.Getenv("GF_VERSION"); version != "" {
-		products = append(products, struct{ Name, Version string }{
-			Name:    "grafana",
-			Version: version,
-		})
-	}
+func (d *Databend) MutateResponse(ctx context.Context, res data.Frames) (data.Frames, error) {
+	newRes := make(data.Frames, 0, len(res))
+	for _, frame := range res {
+		if frame.Meta.PreferredVisualization == data.VisType(data.VisTypeLogs) {
+			// newFrame := data.NewFrame(frame.Name)
+			var newFields []*data.Field
 
-	if info, err := build.GetBuildInfo(); err == nil {
-		products = append(products, struct{ Name, Version string }{
-			Name:    "clickhouse-datasource",
-			Version: info.Version,
-		})
+			for _, field := range frame.Fields {
+				newFields = append(newFields, field)
+				if (field.Type() == data.FieldTypeNullableJSON || field.Type() == data.FieldTypeJSON) && field.Len() > 0 {
+					flattenedFields, err := flattenDFKvField(field)
+					if err != nil {
+						return nil, err
+					}
+					newFields = append(newFields, flattenedFields...)
+				}
+			}
+			newFrame := data.NewFrame(frame.Name, newFields...)
+			newFrame.SetMeta(frame.Meta)
+			newRes = append(newRes, newFrame)
+		} else {
+			newRes = append(newRes, frame)
+		}
 	}
-
-	return products
+	return newRes, nil
 }
 
 func CheckMinServerVersion(conn *sql.DB, major, minor, patch uint64) (bool, error) {
@@ -276,95 +334,3 @@ func CheckMinServerVersion(conn *sql.DB, major, minor, patch uint64) (bool, erro
 	}
 	return true, nil
 }
-
-// Connect opens a sql.DB connection using datasource settings
-// Converters defines list of data type converters
-// func (h *Clickhouse) Converters() []sqlutil.Converter {
-// 	return converters.ClickhouseConverters
-// }
-
-// // Macros returns list of macro functions convert the macros of raw query
-// func (h *Clickhouse) Macros() sqlds.Macros {
-// 	return map[string]sqlds.MacroFunc{
-// 		"fromTime":        macros.FromTimeFilter,
-// 		"toTime":          macros.ToTimeFilter,
-// 		"timeFilter_ms":   macros.TimeFilterMs,
-// 		"timeFilter":      macros.TimeFilter,
-// 		"dateFilter":      macros.DateFilter,
-// 		"timeInterval_ms": macros.TimeIntervalMs,
-// 		"timeInterval":    macros.TimeInterval,
-// 		"interval_s":      macros.IntervalSeconds,
-// 	}
-// }
-
-// func (h *Clickhouse) Settings(config backend.DataSourceInstanceSettings) sqlds.DriverSettings {
-// 	settings, err := LoadSettings(config)
-// 	timeout := 60
-// 	if err == nil {
-// 		t, err := strconv.Atoi(settings.QueryTimeout)
-// 		if err == nil {
-// 			timeout = t
-// 		}
-// 	}
-// 	return sqlds.DriverSettings{
-// 		Timeout: time.Second * time.Duration(timeout),
-// 		FillMode: &data.FillMissing{
-// 			Mode: data.FillModeNull,
-// 		},
-// 	}
-// }
-
-// func (h *Clickhouse) MutateQuery(ctx context.Context, req backend.DataQuery) (context.Context, backend.DataQuery) {
-// var dataQuery struct {
-// 	Meta struct {
-// 		TimeZone string `json:"timezone"`
-// 	} `json:"meta"`
-// 	Format int `json:"format"`
-// }
-
-// if err := json.Unmarshal(req.JSON, &dataQuery); err != nil {
-// 	return ctx, req
-// }
-
-// if dataQuery.Meta.TimeZone == "" {
-// 	return ctx, req
-// }
-
-// loc, _ := time.LoadLocation(dataQuery.Meta.TimeZone)
-// return clickhouse.Context(ctx, clickhouse.WithUserLocation(loc)), req
-// }
-
-// MutateResponse For any view other than traces we convert FieldTypeNullableJSON to string
-// func (h *Clickhouse) MutateResponse(ctx context.Context, res data.Frames) (data.Frames, error) {
-// 	for _, frame := range res {
-// 		if frame.Meta.PreferredVisualization != data.VisType(data.VisTypeTrace) &&
-// 			frame.Meta.PreferredVisualization != data.VisType(data.VisTypeTable) {
-// 			var fields []*data.Field
-// 			for _, field := range frame.Fields {
-// 				values := make([]*string, field.Len())
-// 				if field.Type() == data.FieldTypeNullableJSON {
-// 					newField := data.NewField(field.Name, field.Labels, values)
-// 					newField.SetConfig(field.Config)
-// 					for i := 0; i < field.Len(); i++ {
-// 						val := field.At(i).(*json.RawMessage)
-// 						if val == nil {
-// 							newField.Set(i, nil)
-// 						} else {
-// 							bytes, err := val.MarshalJSON()
-// 							if err != nil {
-// 								return res, err
-// 							}
-// 							sVal := string(bytes)
-// 							newField.Set(i, &sVal)
-// 						}
-// 					}
-// 					fields = append(fields, newField)
-// 				} else {
-// 					fields = append(fields, field)
-// 				}
-// 			}
-// 			frame.Fields = fields
-// 		}
-// 	}
-// 	return res, nil
-// }

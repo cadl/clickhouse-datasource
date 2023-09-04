@@ -3,7 +3,6 @@ module github.com/grafana/clickhouse-datasource
 go 1.20
 
 require (
-	github.com/go-sql-driver/mysql v1.7.1
 	github.com/grafana/grafana-plugin-sdk-go v0.173.0
 	github.com/grafana/sqlds/v2 v2.5.0
 	github.com/paulmach/orb v0.10.0
@@ -13,10 +12,13 @@ require (
 	golang.org/x/net v0.14.0 // indirect
 )
 
+require github.com/databendcloud/databend-go v0.4.3
+
 require (
 	cloud.google.com/go/compute/metadata v0.2.3 // indirect
 	github.com/BurntSushi/toml v1.3.2 // indirect
 	github.com/apache/arrow/go/arrow v0.0.0-20211112161151-bc219186db40 // indirect
+	github.com/avast/retry-go v3.0.0+incompatible // indirect
 	github.com/beorn7/perks v1.0.1 // indirect
 	github.com/cenkalti/backoff/v4 v4.2.1 // indirect
 	github.com/cespare/xxhash/v2 v2.2.0 // indirect
@@ -74,6 +76,7 @@ require (
 	github.com/prometheus/common v0.42.0 // indirect
 	github.com/prometheus/procfs v0.8.0 // indirect
 	github.com/russross/blackfriday/v2 v2.1.0 // indirect
+	github.com/sirupsen/logrus v1.9.0 // indirect
 	github.com/smartystreets/goconvey v0.0.0-20190330032615-68dc04aab96a // indirect
 	github.com/unknwon/bra v0.0.0-20200517080246-1e3013ecaff8 // indirect
 	github.com/unknwon/com v1.0.1 // indirect

@@ -36,3 +36,5 @@ provisioning
 **/.DS_Store
 .eslintcache
 .nvmrc
+
+.vscode/settings.json
