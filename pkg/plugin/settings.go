@@ -5,31 +5,29 @@ import (
 	"fmt"
 	"strconv"
 	"strings"
-	"time"
 
 	"github.com/grafana/grafana-plugin-sdk-go/backend"
-	"github.com/grafana/grafana-plugin-sdk-go/backend/proxy"
 )
 
 // Settings - data loaded from grafana settings database
 type Settings struct {
-	Server             string `json:"server,omitempty"`
-	Port               int64  `json:"port,omitempty"`
-	Username           string `json:"username,omitempty"`
-	DefaultDatabase    string `json:"defaultDatabase,omitempty"`
-	InsecureSkipVerify bool   `json:"tlsSkipVerify,omitempty"`
-	TlsClientAuth      bool   `json:"tlsAuth,omitempty"`
-	TlsAuthWithCACert  bool   `json:"tlsAuthWithCACert,omitempty"`
-	Password           string `json:"-,omitempty"`
-	TlsCACert          string
-	TlsClientCert      string
-	TlsClientKey       string
-	Secure             bool            `json:"secure,omitempty"`
-	Timeout            string          `json:"timeout,omitempty"`
-	QueryTimeout       string          `json:"queryTimeout,omitempty"`
-	Protocol           string          `json:"protocol"`
-	CustomSettings     []CustomSetting `json:"customSettings"`
-	ProxyOptions       *proxy.Options
+	Server                    string `json:"server,omitempty"`
+	Port                      int64  `json:"port,omitempty"`
+	Username                  string `json:"username,omitempty"`
+	DefaultDatabase           string `json:"defaultDatabase,omitempty"`
+	InsecureSkipVerify        bool   `json:"tlsSkipVerify,omitempty"`
+	TlsClientAuth             bool   `json:"tlsAuth,omitempty"`
+	TlsAuthWithCACert         bool   `json:"tlsAuthWithCACert,omitempty"`
+	Password                  string `json:"-,omitempty"`
+	TlsCACert                 string
+	TlsClientCert             string
+	TlsClientKey              string
+	Secure                    bool            `json:"secure,omitempty"`
+	Timezone                  string          `json:"timezone,omitempty"`
+	Timeout                   string          `json:"timeout,omitempty"`
+	EnableLogsMapFieldFlatten bool            `json:"enableLogsMapFieldFlatten,omitempty"`
+	QueryTimeout              string          `json:"queryTimeout,omitempty"`
+	CustomSettings            []CustomSetting `json:"customSettings"`
 }
 
 type CustomSetting struct {
@@ -104,16 +102,6 @@ func LoadSettings(config backend.DataSourceInstanceSettings) (settings Settings,
 			settings.TlsAuthWithCACert = jsonData["tlsAuthWithCACert"].(bool)
 		}
 	}
-	if jsonData["secure"] != nil {
-		if secure, ok := jsonData["secure"].(string); ok {
-			settings.Secure, err = strconv.ParseBool(secure)
-			if err != nil {
-				return settings, fmt.Errorf("could not parse secure value: %w", err)
-			}
-		} else {
-			settings.Secure = jsonData["secure"].(bool)
-		}
-	}
 
 	if jsonData["timeout"] != nil {
 		settings.Timeout = jsonData["timeout"].(string)
@@ -126,9 +114,14 @@ func LoadSettings(config backend.DataSourceInstanceSettings) (settings Settings,
 			settings.QueryTimeout = fmt.Sprintf("%d", int64(val))
 		}
 	}
-	if jsonData["protocol"] != nil {
-		settings.Protocol = jsonData["protocol"].(string)
+	if jsonData["timezone"] != nil {
+		settings.Timezone = jsonData["timezone"].(string)
 	}
+
+	if jsonData["enableLogsMapFieldFlatten"] != nil {
+		settings.EnableLogsMapFieldFlatten = jsonData["enableLogsMapFieldFlatten"].(bool)
+	}
+
 	if jsonData["customSettings"] != nil {
 		customSettingsRaw := jsonData["customSettings"].([]interface{})
 		customSettings := make([]CustomSetting, len(customSettingsRaw))
@@ -165,17 +158,6 @@ func LoadSettings(config backend.DataSourceInstanceSettings) (settings Settings,
 	tlsClientKey, ok := config.DecryptedSecureJSONData["tlsClientKey"]
 	if ok {
 		settings.TlsClientKey = tlsClientKey
-	}
-
-	proxyOpts, err := config.ProxyOptions()
-	if err == nil && proxyOpts != nil {
-		// the sdk expects the timeout to not be a string
-		timeout, err := strconv.ParseFloat(settings.Timeout, 64)
-		if err == nil {
-			proxyOpts.Timeouts.Timeout = (time.Duration(timeout) * time.Second)
-		}
-
-		settings.ProxyOptions = proxyOpts
 	}
 
 	return settings, settings.isValid()

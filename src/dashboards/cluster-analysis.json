@@ -16,8 +16,8 @@
     },
     {
       "type": "datasource",
-      "id": "grafana-clickhouse-datasource",
-      "name": "ClickHouse",
+      "id": "grafana-databend-datasource",
+      "name": "Databend",
       "version": "2.0.0"
     },
     {
@@ -65,7 +65,7 @@
   "panels": [
     {
       "datasource": {
-        "type": "grafana-clickhouse-datasource",
+        "type": "grafana-databend-datasource",
         "uid": "${datasource}"
       },
       "description": "",
@@ -125,7 +125,7 @@
       "targets": [
         {
           "datasource": {
-            "type": "grafana-clickhouse-datasource",
+            "type": "grafana-databend-datasource",
             "uid": "${datasource}"
           },
           "format": 1,
@@ -169,7 +169,7 @@
     },
     {
       "datasource": {
-        "type": "grafana-clickhouse-datasource",
+        "type": "grafana-databend-datasource",
         "uid": "${datasource}"
       },
       "description": "",
@@ -229,7 +229,7 @@
       "targets": [
         {
           "datasource": {
-            "type": "grafana-clickhouse-datasource",
+            "type": "grafana-databend-datasource",
             "uid": "${datasource}"
           },
           "format": 1,
@@ -261,7 +261,7 @@
     },
     {
       "datasource": {
-        "type": "grafana-clickhouse-datasource",
+        "type": "grafana-databend-datasource",
         "uid": "${datasource}"
       },
       "fieldConfig": {
@@ -307,7 +307,7 @@
       "targets": [
         {
           "datasource": {
-            "type": "grafana-clickhouse-datasource",
+            "type": "grafana-databend-datasource",
             "uid": "${datasource}"
           },
           "format": 1,
@@ -327,7 +327,7 @@
     },
     {
       "datasource": {
-        "type": "grafana-clickhouse-datasource",
+        "type": "grafana-databend-datasource",
         "uid": "${datasource}"
       },
       "fieldConfig": {
@@ -373,7 +373,7 @@
       "targets": [
         {
           "datasource": {
-            "type": "grafana-clickhouse-datasource",
+            "type": "grafana-databend-datasource",
             "uid": "${datasource}"
           },
           "format": 1,
@@ -393,7 +393,7 @@
     },
     {
       "datasource": {
-        "type": "grafana-clickhouse-datasource",
+        "type": "grafana-databend-datasource",
         "uid": "${datasource}"
       },
       "fieldConfig": {
@@ -439,7 +439,7 @@
       "targets": [
         {
           "datasource": {
-            "type": "grafana-clickhouse-datasource",
+            "type": "grafana-databend-datasource",
             "uid": "${datasource}"
           },
           "format": 1,
@@ -459,7 +459,7 @@
     },
     {
       "datasource": {
-        "type": "grafana-clickhouse-datasource",
+        "type": "grafana-databend-datasource",
         "uid": "${datasource}"
       },
       "fieldConfig": {
@@ -505,7 +505,7 @@
       "targets": [
         {
           "datasource": {
-            "type": "grafana-clickhouse-datasource",
+            "type": "grafana-databend-datasource",
             "uid": "${datasource}"
           },
           "format": 1,
@@ -525,7 +525,7 @@
     },
     {
       "datasource": {
-        "type": "grafana-clickhouse-datasource",
+        "type": "grafana-databend-datasource",
         "uid": "${datasource}"
       },
       "description": "",
@@ -670,7 +670,7 @@
       "targets": [
         {
           "datasource": {
-            "type": "grafana-clickhouse-datasource",
+            "type": "grafana-databend-datasource",
             "uid": "${datasource}"
           },
           "format": 1,
@@ -711,7 +711,7 @@
     },
     {
       "datasource": {
-        "type": "grafana-clickhouse-datasource",
+        "type": "grafana-databend-datasource",
         "uid": "${datasource}"
       },
       "fieldConfig": {
@@ -776,7 +776,7 @@
       "targets": [
         {
           "datasource": {
-            "type": "grafana-clickhouse-datasource",
+            "type": "grafana-databend-datasource",
             "uid": "${datasource}"
           },
           "format": 1,
@@ -797,7 +797,7 @@
     },
     {
       "datasource": {
-        "type": "grafana-clickhouse-datasource",
+        "type": "grafana-databend-datasource",
         "uid": "${datasource}"
       },
       "fieldConfig": {
@@ -1032,7 +1032,7 @@
       "targets": [
         {
           "datasource": {
-            "type": "grafana-clickhouse-datasource",
+            "type": "grafana-databend-datasource",
             "uid": "${datasource}"
           },
           "format": 1,
@@ -1082,7 +1082,7 @@
     },
     {
       "datasource": {
-        "type": "grafana-clickhouse-datasource",
+        "type": "grafana-databend-datasource",
         "uid": "${datasource}"
       },
       "fieldConfig": {
@@ -1141,7 +1141,7 @@
       "targets": [
         {
           "datasource": {
-            "type": "grafana-clickhouse-datasource",
+            "type": "grafana-databend-datasource",
             "uid": "${datasource}"
           },
           "format": 1,
@@ -1162,7 +1162,7 @@
     },
     {
       "datasource": {
-        "type": "grafana-clickhouse-datasource",
+        "type": "grafana-databend-datasource",
         "uid": "${datasource}"
       },
       "description": "",
@@ -1386,7 +1386,7 @@
       "targets": [
         {
           "datasource": {
-            "type": "grafana-clickhouse-datasource",
+            "type": "grafana-databend-datasource",
             "uid": "${datasource}"
           },
           "format": 1,
@@ -1465,7 +1465,7 @@
     },
     {
       "datasource": {
-        "type": "grafana-clickhouse-datasource",
+        "type": "grafana-databend-datasource",
         "uid": "${datasource}"
       },
       "fieldConfig": {
@@ -1511,7 +1511,7 @@
       "targets": [
         {
           "datasource": {
-            "type": "grafana-clickhouse-datasource",
+            "type": "grafana-databend-datasource",
             "uid": "${datasource}"
           },
           "format": 1,
@@ -1550,7 +1550,7 @@
     },
     {
       "datasource": {
-        "type": "grafana-clickhouse-datasource",
+        "type": "grafana-databend-datasource",
         "uid": "${datasource}"
       },
       "fieldConfig": {
@@ -1663,7 +1663,7 @@
       "targets": [
         {
           "datasource": {
-            "type": "grafana-clickhouse-datasource",
+            "type": "grafana-databend-datasource",
             "uid": "${datasource}"
           },
           "format": 1,
@@ -1710,11 +1710,11 @@
         "current": {},
         "hide": 0,
         "includeAll": false,
-        "label": "ClickHouse instance",
+        "label": "Databend instance",
         "multi": false,
         "name": "datasource",
         "options": [],
-        "query": "grafana-clickhouse-datasource",
+        "query": "grafana-databend-datasource",
         "queryValue": "",
         "refresh": 1,
         "regex": "",
@@ -1724,7 +1724,7 @@
       {
         "current": {},
         "datasource": {
-          "type": "grafana-clickhouse-datasource",
+          "type": "grafana-databend-datasource",
           "uid": "${datasource}"
         },
         "definition": "SELECT name FROM system.databases;",
@@ -1743,7 +1743,7 @@
       },
       {
         "datasource": {
-          "type": "grafana-clickhouse-datasource",
+          "type": "grafana-databend-datasource",
           "uid": "y-Ka8y37k"
         },
         "filters": [],
@@ -1760,7 +1760,7 @@
   },
   "timepicker": {},
   "timezone": "",
-  "title": "ClickHouse - Cluster Analysis",
+  "title": "Databend - Cluster Analysis",
   "uid": "_hAsuzBnz",
   "version": 6,
   "weekStart": ""

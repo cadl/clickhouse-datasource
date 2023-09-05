@@ -27,7 +27,6 @@ export interface ParseError {
   };
 }
 
-// the sql parser only handles generic syntax, allow any clickhouse specific syntax
 const allow = ['INTERVAL'];
 
 export function validate(sql: string): Validation {

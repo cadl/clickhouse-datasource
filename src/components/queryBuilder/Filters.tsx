@@ -247,7 +247,6 @@ export const FilterEditor = (props: {
     } else {
       // In case user wants to add a custom filter for the
       // field with `Map` type (e.g. colName['keyName'])
-      // More info: https://clickhouse.com/docs/en/sql-reference/data-types/map/
       const matchingMapField = fieldsList.find((f) => {
         return (
           f.type.startsWith('Map') &&

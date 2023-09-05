@@ -1,24 +1,23 @@
 import { PluginType } from '@grafana/data';
-import { CHQuery, Protocol, QueryType } from '../types';
+import { CHQuery, QueryType } from '../types';
 import { Datasource } from '../data/CHDatasource';
 
 export const mockDatasource = new Datasource({
   id: 1,
-  uid: 'clickhouse_ds',
-  type: 'grafana-clickhouse-datasource',
-  name: 'ClickHouse',
+  uid: 'databend_ds',
+  type: 'grafana-databend-datasource',
+  name: 'databend',
   jsonData: {
     server: 'foo.com',
     port: 443,
     username: 'user',
     defaultDatabase: 'foo',
-    protocol: Protocol.NATIVE,
   },
   readOnly: true,
   access: 'direct',
   meta: {
-    id: 'grafana-clickhouse-datasource',
-    name: 'ClickHouse',
+    id: 'grafana-databend-datasource',
+    name: 'databend',
     type: PluginType.datasource,
     module: '',
     baseUrl: '',

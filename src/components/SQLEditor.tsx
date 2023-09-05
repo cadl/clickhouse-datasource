@@ -70,10 +70,10 @@ export const SQLEditor = (props: SQLEditorProps) => {
     const v = validate(sql);
     const errorSeverity = 8;
     if (v.valid) {
-      me.setModelMarkers(model, 'clickhouse', []);
+      me.setModelMarkers(model, 'databend', []);
     } else {
       const err = v.error!;
-      me.setModelMarkers(model, 'clickhouse', [
+      me.setModelMarkers(model, 'databend', [
         {
           startLineNumber: err.startLine,
           startColumn: err.startCol,

@@ -1,7 +1,7 @@
 {
-  "name": "clickhouse-datasource",
-  "version": "3.3.0",
-  "description": "Clickhouse Datasource",
+  "name": "databend-datasource",
+  "version": "0.1.0",
+  "description": "Databend Datasource",
   "engines": {
     "node": ">=16"
   },

@@ -3,15 +3,12 @@ package converters
 import (
 	"encoding/json"
 	"fmt"
-	"math/big"
-	"net"
 	"reflect"
 	"regexp"
 	"time"
 
 	"github.com/grafana/grafana-plugin-sdk-go/data"
 	"github.com/grafana/grafana-plugin-sdk-go/data/sqlutil"
-	"github.com/paulmach/orb"
 	"github.com/shopspring/decimal"
 )
 
@@ -27,25 +24,20 @@ var matchRegexes = map[string]*regexp.Regexp{
 	"Array()":                   regexp.MustCompile(`^Array\(.*\)`),
 	"Date":                      regexp.MustCompile(`^Date\(?`),
 	"Decimal":                   regexp.MustCompile(`^Decimal`),
-	"FixedString()":             regexp.MustCompile(`^Nullable\(FixedString\(.*\)\)`),
-	"IP":                        regexp.MustCompile(`^IPv[4,6]`),
 	"Map()":                     regexp.MustCompile(`^Map\(.*\)`),
-	"Nested()":                  regexp.MustCompile(`^Nested\(.*\)`),
 	"Nullable(Date)":            regexp.MustCompile(`^Nullable\(Date\(?`),
 	"Nullable(Decimal)":         regexp.MustCompile(`^Nullable\(Decimal`),
-	"Nullable(IP)":              regexp.MustCompile(`Nullable\(IP`),
 	"Nullable(String)":          regexp.MustCompile(`Nullable\(String`),
-	"Point":                     regexp.MustCompile(`^Point`),
 	"SimpleAggregateFunction()": regexp.MustCompile(`^SimpleAggregateFunction\(.*\)`),
 	"Tuple()":                   regexp.MustCompile(`^Tuple\(.*\)`),
 }
 
 var Converters = map[string]Converter{
-	"Bool": {
+	"Boolean": {
 		fieldType: data.FieldTypeBool,
 		scanType:  reflect.PtrTo(reflect.TypeOf(true)),
 	},
-	"Nullable(Bool)": {
+	"Nullable(Boolean)": {
 		fieldType: data.FieldTypeNullableBool,
 		scanType:  reflect.PtrTo(reflect.PtrTo(reflect.TypeOf(true))),
 	},
@@ -129,52 +121,23 @@ var Converters = map[string]Converter{
 		fieldType: data.FieldTypeNullableInt8,
 		scanType:  reflect.PtrTo(reflect.PtrTo(reflect.TypeOf(int8(0)))),
 	},
-	// this is in precise and in appropriate for any math, but everything goes to floats in JS anyway
-	"Int128": {
-		convert:   bigIntConvert,
-		fieldType: data.FieldTypeFloat64,
-		scanType:  reflect.PtrTo(reflect.TypeOf(big.NewInt(0))),
-	},
-	"Nullable(Int128)": {
-		convert:   bigIntNullableConvert,
-		fieldType: data.FieldTypeNullableFloat64,
-		scanType:  reflect.PtrTo(reflect.PtrTo(reflect.TypeOf(big.NewInt(0)))),
-	},
-	"Int256": {
-		convert:   bigIntConvert,
-		fieldType: data.FieldTypeFloat64,
-		scanType:  reflect.PtrTo(reflect.TypeOf(big.NewInt(0))),
-	},
-	"Nullable(Int256)": {
-		convert:   bigIntNullableConvert,
-		fieldType: data.FieldTypeNullableFloat64,
-		scanType:  reflect.PtrTo(reflect.PtrTo(reflect.TypeOf(big.NewInt(0)))),
-	},
-	"UInt128": {
-		convert:   bigIntConvert,
-		fieldType: data.FieldTypeFloat64,
-		scanType:  reflect.PtrTo(reflect.TypeOf(big.NewInt(0))),
-	},
-	"Nullable(UInt128)": {
-		convert:   bigIntNullableConvert,
-		fieldType: data.FieldTypeNullableFloat64,
-		scanType:  reflect.PtrTo(reflect.PtrTo(reflect.TypeOf(big.NewInt(0)))),
-	},
-	"UInt256": {
-		convert:   bigIntConvert,
-		fieldType: data.FieldTypeFloat64,
-		scanType:  reflect.PtrTo(reflect.TypeOf(big.NewInt(0))),
-	},
-	"Nullable(UInt256)": {
-		convert:   bigIntNullableConvert,
-		fieldType: data.FieldTypeNullableFloat64,
-		scanType:  reflect.PtrTo(reflect.PtrTo(reflect.TypeOf(big.NewInt(0)))),
-	},
 	// covers DateTime with tz, DateTime64 - see regexes, Date32
 	"Date": {
 		fieldType:  data.FieldTypeTime,
 		matchRegex: matchRegexes["Date"],
 		scanType:   reflect.PtrTo(reflect.TypeOf(time.Time{})),
+	},
+	"DateTime": {
+		fieldType: data.FieldTypeTime,
+		scanType:  reflect.PtrTo(reflect.TypeOf(time.Time{})),
+	},
+	"DateTime64": {
+		fieldType: data.FieldTypeTime,
+		scanType:  reflect.PtrTo(reflect.TypeOf(time.Time{})),
+	},
+	"Timestamp": {
+		fieldType: data.FieldTypeTime,
+		scanType:  reflect.PtrTo(reflect.TypeOf(time.Time{})),
 	},
 	"Nullable(Date)": {
 		fieldType:  data.FieldTypeNullableTime,
@@ -204,13 +167,6 @@ var Converters = map[string]Converter{
 		matchRegex: matchRegexes["Tuple()"],
 		scanType:   reflect.TypeOf((*interface{})(nil)).Elem(),
 	},
-	// NestedConverter currently only supports flatten_nested=0 only which can be marshalled into []map[string]interface{}
-	"Nested()": {
-		convert:    jsonConverter,
-		fieldType:  data.FieldTypeNullableJSON,
-		matchRegex: matchRegexes["Nested()"],
-		scanType:   reflect.TypeOf([]map[string]interface{}{}),
-	},
 	"Array()": {
 		convert:    jsonConverter,
 		fieldType:  data.FieldTypeNullableJSON,
@@ -223,22 +179,9 @@ var Converters = map[string]Converter{
 		matchRegex: matchRegexes["Map()"],
 		scanType:   reflect.TypeOf((*interface{})(nil)).Elem(),
 	},
-	"FixedString()": {
-		fieldType:  data.FieldTypeNullableString,
-		matchRegex: matchRegexes["FixedString()"],
-		scanType:   reflect.PtrTo(reflect.PtrTo(reflect.TypeOf(""))),
-	},
-	"IP": {
-		convert:    ipConverter,
-		fieldType:  data.FieldTypeString,
-		matchRegex: matchRegexes["IP"],
-		scanType:   reflect.PtrTo(reflect.TypeOf(net.IP{})),
-	},
-	"Nullable(IP)": {
-		convert:    ipNullConverter,
-		fieldType:  data.FieldTypeNullableString,
-		matchRegex: matchRegexes["Nullable(IP)"],
-		scanType:   reflect.PtrTo(reflect.PtrTo(reflect.TypeOf(net.IP{}))),
+	"String": {
+		fieldType: data.FieldTypeString,
+		scanType:  reflect.PtrTo(reflect.TypeOf("")),
 	},
 	"SimpleAggregateFunction()": {
 		convert:    jsonConverter,
@@ -246,18 +189,12 @@ var Converters = map[string]Converter{
 		matchRegex: matchRegexes["SimpleAggregateFunction()"],
 		scanType:   reflect.TypeOf((*interface{})(nil)).Elem(),
 	},
-	"Point": {
-		convert:    pointConverter,
-		fieldType:  data.FieldTypeNullableJSON,
-		matchRegex: matchRegexes["Point"],
-		scanType:   reflect.TypeOf((*interface{})(nil)).Elem(),
-	},
 }
 
 var ComplexTypes = []string{"Map"}
-var ClickhouseConverters = ClickHouseConverters()
+var DatabendConverters = GetConverters()
 
-func ClickHouseConverters() []sqlutil.Converter {
+func GetConverters() []sqlutil.Converter {
 	var list []sqlutil.Converter
 	for name, converter := range Converters {
 		list = append(list, createConverter(name, converter))
@@ -346,72 +283,4 @@ func decimalNullConvert(in interface{}) (interface{}, error) {
 	}
 	f, _ := (*v).Float64()
 	return &f, nil
-}
-
-func bigIntConvert(in interface{}) (interface{}, error) {
-	if in == nil {
-		return float64(0), nil
-	}
-	v, ok := in.(**big.Int)
-	if !ok {
-		return nil, fmt.Errorf("invalid big int - %v", in)
-	}
-	f, _ := new(big.Float).SetInt(*v).Float64()
-	return f, nil
-}
-
-func bigIntNullableConvert(in interface{}) (interface{}, error) {
-	if in == nil {
-		return (*float64)(nil), nil
-	}
-	v, ok := in.(***big.Int)
-	if !ok {
-		return nil, fmt.Errorf("invalid big int - %v", in)
-	}
-	if *v == nil || **v == nil {
-		return (*float64)(nil), nil
-	}
-	f, _ := new(big.Float).SetInt(**v).Float64()
-	return &f, nil
-}
-
-func ipConverter(in interface{}) (interface{}, error) {
-	if in == nil {
-		return nil, nil
-	}
-	v, ok := in.(*net.IP)
-	if !ok {
-		return nil, fmt.Errorf("invalid ip - %v", in)
-	}
-	if v == nil {
-		return nil, nil
-	}
-	sIP := v.String()
-	return sIP, nil
-}
-
-func ipNullConverter(in interface{}) (interface{}, error) {
-	if in == nil {
-		return nil, nil
-	}
-	v, ok := in.(**net.IP)
-	if !ok {
-		return nil, fmt.Errorf("invalid ip - %v", in)
-	}
-	if *v == nil {
-		return nil, nil
-	}
-	sIP := (*v).String()
-	return &sIP, nil
-}
-
-func pointConverter(in interface{}) (interface{}, error) {
-	if in == nil {
-		return nil, nil
-	}
-	v, ok := (*(in.(*interface{}))).(orb.Point)
-	if !ok {
-		return nil, fmt.Errorf("invalid point - %v", in)
-	}
-	return jsonConverter(v)
 }

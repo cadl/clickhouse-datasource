@@ -5,17 +5,17 @@ export const defaultQuery: Partial<CHQuery> = {};
 export interface CHConfig extends DataSourceJsonData {
   username: string;
   server: string;
-  protocol: Protocol;
   port: number;
   defaultDatabase?: string;
   tlsSkipVerify?: boolean;
   tlsAuth?: boolean;
   tlsAuthWithCACert?: boolean;
-  secure?: boolean;
   validate?: boolean;
   timeout?: string;
   queryTimeout?: string;
+  timezone?: string;
   customSettings?: CHCustomSetting[];
+  enableLogsMapFieldFlatten?: boolean;
   enableSecureSocksProxy?: boolean;
 }
 
@@ -29,11 +29,6 @@ export interface CHSecureConfig {
   tlsCACert?: string;
   tlsClientCert?: string;
   tlsClientKey?: string;
-}
-
-export enum Protocol {
-  NATIVE = 'native',
-  HTTP = 'http',
 }
 
 export enum Format {

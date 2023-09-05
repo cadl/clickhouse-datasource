@@ -2,28 +2,24 @@ import { E2ESelectors } from '@grafana/e2e-selectors';
 export const Components = {
   ConfigEditor: {
     ServerAddress: {
-      label: 'Server address',
-      placeholder: 'Server TCP address',
-      tooltip: 'ClickHouse native TCP server address',
+      label: 'Databend HTTP Server address',
+      placeholder: 'Server HTTP address',
+      tooltip: 'Databend HTTP Server address',
     },
     ServerPort: {
       label: 'Server port',
-      placeholder: (secure: string) => `Typically ${secure === 'true' ? '9440' : '9000'}`,
-      tooltip: 'ClickHouse native TCP port. Typically 9000 for unsecure, 9440 for secure',
-    },
-    Protocol: {
-      label: 'Protocol',
-      tooltip: 'Native or HTTP for transport',
+      placeholder: '8000',
+      tooltip: 'Databend HTTP Server port, default 8000',
     },
     Username: {
       label: 'Username',
       placeholder: 'Username',
-      tooltip: 'ClickHouse username',
+      tooltip: 'Databend username',
     },
     Password: {
       label: 'Password',
       placeholder: 'Password',
-      tooltip: 'ClickHouse password',
+      tooltip: 'Databend password',
     },
     TLSSkipVerify: {
       label: 'Skip TLS Verify',
@@ -64,18 +60,19 @@ export const Components = {
       placeholder: '60',
       tooltip: 'Timeout in seconds for read queries',
     },
-    Secure: {
-      label: 'Secure Connection',
-      tooltip: 'Toggle on if the connection is secure',
-    },
     Validate: {
       label: 'Validate SQL',
       tooltip: 'Validate Sql in the editor.',
     },
-    SecureSocksProxy: {
-      label: 'Enable Secure Socks Proxy',
-      tooltip: 'Enable proxying the datasource connection through the secure socks proxy to a different network.',
+    EnableLogsMapFieldFlatten: {
+      label: 'Enable Map Field Flatten',
+      tooltip: 'Enable Map Field Flatten',
     },
+    Timezone: {
+      label: 'Timezone',
+      placeholder: 'Aisa/Shanghai',
+      tooltip: 'Timezone to use for date formatting',
+    }
   },
   QueryEditor: {
     CodeEditor: {
@@ -124,11 +121,11 @@ export const Components = {
       },
       DATABASE: {
         label: 'Database',
-        tooltip: 'Clickhouse database to query from',
+        tooltip: 'database to query from',
       },
       FROM: {
         label: 'Table',
-        tooltip: 'Clickhouse table to query from',
+        tooltip: 'table to query from',
       },
       SELECT: {
         label: 'Fields',

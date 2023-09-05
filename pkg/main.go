@@ -3,7 +3,7 @@ package main
 import (
 	"os"
 
-	"github.com/grafana/clickhouse-datasource/pkg/plugin"
+	"github.com/cadl/grafana-databend-datasource/pkg/plugin"
 	"github.com/grafana/grafana-plugin-sdk-go/backend"
 	"github.com/grafana/grafana-plugin-sdk-go/backend/datasource"
 	"github.com/grafana/grafana-plugin-sdk-go/backend/instancemgmt"
@@ -12,7 +12,7 @@ import (
 )
 
 func main() {
-	if err := datasource.Manage("grafana-clickhouse-datasource", newDatasource, datasource.ManageOpts{}); err != nil {
+	if err := datasource.Manage("grafana-databend-datasource", newDatasource, datasource.ManageOpts{}); err != nil {
 		log.DefaultLogger.Error(err.Error())
 		os.Exit(1)
 	}

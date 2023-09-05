@@ -5,10 +5,8 @@ import (
 	"fmt"
 	"reflect"
 	"testing"
-	"time"
 
 	"github.com/grafana/grafana-plugin-sdk-go/backend"
-	"github.com/grafana/grafana-plugin-sdk-go/backend/proxy"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -28,35 +26,26 @@ func TestLoadSettings(t *testing.T) {
 				args: args{
 					config: backend.DataSourceInstanceSettings{
 						UID:                     "ds-uid",
-						JSONData:                []byte(`{ "server": "foo", "port": 443, "username": "baz", "defaultDatabase":"example", "tlsSkipVerify": true, "tlsAuth" : true, "tlsAuthWithCACert": true, "timeout": "10", "enableSecureSocksProxy": true}`),
-						DecryptedSecureJSONData: map[string]string{"password": "bar", "tlsCACert": "caCert", "tlsClientCert": "clientCert", "tlsClientKey": "clientKey", "secureSocksProxyPassword": "test"},
+						JSONData:                []byte(`{ "server": "foo", "port": 443, "username": "baz", "defaultDatabase":"example", "tlsSkipVerify": true, "tlsAuth" : true, "tlsAuthWithCACert": true, "timeout": "10","timezone":"Aisa/Shanghai","enableLogsMapFieldFlatten":true}`),
+						DecryptedSecureJSONData: map[string]string{"password": "bar", "tlsCACert": "caCert", "tlsClientCert": "clientCert", "tlsClientKey": "clientKey"},
 					},
 				},
 				wantSettings: Settings{
-					Server:             "foo",
-					Port:               443,
-					Username:           "baz",
-					DefaultDatabase:    "example",
-					InsecureSkipVerify: true,
-					TlsClientAuth:      true,
-					TlsAuthWithCACert:  true,
-					Password:           "bar",
-					TlsCACert:          "caCert",
-					TlsClientCert:      "clientCert",
-					TlsClientKey:       "clientKey",
-					Timeout:            "10",
-					QueryTimeout:       "60",
-					ProxyOptions: &proxy.Options{
-						Enabled: true,
-						Auth: &proxy.AuthOptions{
-							Username: "ds-uid",
-							Password: "test",
-						},
-						Timeouts: &proxy.TimeoutOptions{
-							Timeout:   10 * time.Second,
-							KeepAlive: proxy.DefaultTimeoutOptions.KeepAlive,
-						},
-					},
+					Server:                    "foo",
+					Port:                      443,
+					Username:                  "baz",
+					DefaultDatabase:           "example",
+					InsecureSkipVerify:        true,
+					TlsClientAuth:             true,
+					TlsAuthWithCACert:         true,
+					Password:                  "bar",
+					TlsCACert:                 "caCert",
+					TlsClientCert:             "clientCert",
+					TlsClientKey:              "clientKey",
+					Timeout:                   "10",
+					QueryTimeout:              "60",
+					Timezone:                  "Aisa/Shanghai",
+					EnableLogsMapFieldFlatten: true,
 				},
 				wantErr: nil,
 			},
@@ -64,7 +53,7 @@ func TestLoadSettings(t *testing.T) {
 				name: "should converting string values to the correct type)",
 				args: args{
 					config: backend.DataSourceInstanceSettings{
-						JSONData:                []byte(`{"server": "test", "port": "443", "tlsSkipVerify": "true", "tlsAuth" : "true", "tlsAuthWithCACert": "true"}`),
+						JSONData:                []byte(`{"server": "test", "port": "443", "tlsSkipVerify": "true", "tlsAuth" : "true", "tlsAuthWithCACert": "true", "timezone":"Aisa/Shanghai"}`),
 						DecryptedSecureJSONData: map[string]string{},
 					},
 				},
@@ -76,7 +65,7 @@ func TestLoadSettings(t *testing.T) {
 					TlsAuthWithCACert:  true,
 					Timeout:            "10",
 					QueryTimeout:       "60",
-					ProxyOptions:       nil,
+					Timezone:           "Aisa/Shanghai",
 				},
 				wantErr: nil,
 			},

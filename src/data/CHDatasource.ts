@@ -207,9 +207,7 @@ export class Datasource
     if (!this.skipAdHocFilter) {
       const adHocFilters = (templateSrv as any)?.getAdhocFilters(this.name);
       if (this.adHocFiltersStatus === AdHocFilterStatus.disabled && adHocFilters?.length > 0) {
-        throw new Error(
-          `Unable to apply ad hoc filters. Upgrade ClickHouse to >=${this.adHocCHVerReq.major}.${this.adHocCHVerReq.minor} or remove ad hoc filters for the dashboard.`
-        );
+        throw new Error("adhoc filters can't be used");
       }
       rawQuery = this.adHocFilter.apply(rawQuery, adHocFilters);
     }
@@ -531,7 +529,7 @@ export class Datasource
 
   private getTagSource() {
     // @todo https://github.com/grafana/grafana/issues/13109
-    const ADHOC_VAR = '$clickhouse_adhoc_query';
+    const ADHOC_VAR = '$databend_adhoc_query';
     const defaultDatabase = this.getDefaultDatabase();
     let source = getTemplateSrv().replace(ADHOC_VAR);
     if (source === ADHOC_VAR && isEmpty(defaultDatabase)) {
@@ -550,22 +548,9 @@ export class Datasource
     return { type: TagType.schema, source: sql, from: source };
   }
 
-  // Returns true if ClickHouse's version is greater than or equal to 22.7
-  // 22.7 added 'settings additional_table_filters' which is used for ad hoc filters
   private async canUseAdhocFilters(): Promise<AdHocFilterStatus> {
     this.skipAdHocFilter = true;
-    const data = await this.fetchData(`SELECT version()`);
-    try {
-      const verString = (data[0] as unknown as string).split('.');
-      const ver = { major: Number.parseInt(verString[0], 10), minor: Number.parseInt(verString[1], 10) };
-      return ver.major > this.adHocCHVerReq.major ||
-        (ver.major === this.adHocCHVerReq.major && ver.minor >= this.adHocCHVerReq.minor)
-        ? AdHocFilterStatus.enabled
-        : AdHocFilterStatus.disabled;
-    } catch (err) {
-      console.error(`Unable to parse ClickHouse version: ${err}`);
-      throw err;
-    }
+    return AdHocFilterStatus.enabled;
   }
 }
 

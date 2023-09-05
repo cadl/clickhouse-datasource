@@ -1,6 +1,6 @@
-# Contributing to ClickHouse Datasource
+# Contributing to Databend Datasource
 
-Thank you for your interest in contributing to this repository. We are glad you want to help us to improve the project and join our community. Feel free to [browse the open issues](https://github.com/grafana/clickhouse-datasource/issues). If you want more straightforward tasks to complete, [we have some](https://github.com/grafana/clickhouse-datasource/issues?q=is%3Aissue+is%3Aopen+label%3A%22good+first+issue%22). For more details about how you can help, please take a look at [Grafana’s Contributing Guide](https://github.com/grafana/grafana/blob/main/CONTRIBUTING.md).
+Thank you for your interest in contributing to this repository. We are glad you want to help us to improve the project and join our community. Feel free to [browse the open issues](https://github.com/cadl/grafana-databend-datasource/issues). If you want more straightforward tasks to complete, [we have some](https://github.com/cadl/grafana-databend-datasource/issues?q=is%3Aissue+is%3Aopen+label%3A%22good+first+issue%22). For more details about how you can help, please take a look at [Grafana’s Contributing Guide](https://github.com/grafana/grafana/blob/main/CONTRIBUTING.md).
 
 ## Development setup
 
@@ -40,13 +40,13 @@ yarn watch
 
 Once you are ready to make a pull request, please read and follow [Create a pull request](https://github.com/grafana/grafana/blob/master/contribute/create-pull-request.md).
 
-## Build a release for the ClickHouse data source plugin
+## Build a release for the Databend data source plugin
 
 You need to have commit rights to the GitHub repository to publish a release.
 
 1. Update the version number in the `package.json` file.
 2. Update the `CHANGELOG.md` by copy and pasting the relevant PRs
-   from [GitHub's Release drafter interface](https://github.com/grafana/clickhouse-datasource/releases/new) or by
+   from [GitHub's Release drafter interface](https://github.com/cadl/grafana-databend-datasource/releases/new) or by
    running `npm run generate-release-notes`.
 3. PR the changes.
 4. Once merged, follow the Drone release process that you can find [here](https://github.com/grafana/integrations-team/wiki/Plugin-Release-Process#drone-release-proces

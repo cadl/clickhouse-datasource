@@ -5,8 +5,8 @@ import (
 	"testing"
 	"time"
 
-	"github.com/grafana/clickhouse-datasource/pkg/macros"
-	"github.com/grafana/clickhouse-datasource/pkg/plugin"
+	"github.com/cadl/grafana-databend-datasource/pkg/macros"
+	"github.com/cadl/grafana-databend-datasource/pkg/plugin"
 	"github.com/grafana/grafana-plugin-sdk-go/backend"
 	"github.com/grafana/sqlds/v2"
 	"github.com/stretchr/testify/assert"
@@ -44,7 +44,7 @@ func TestMacroFromTimeFilter(t *testing.T) {
 	}{
 		{
 			name: "should return timefilter",
-			want: "toDateTime(intDiv(1415792726371,1000))",
+			want: "TO_TIMESTAMP(1415792726)",
 		},
 	}
 	for _, tt := range tests {
@@ -76,7 +76,7 @@ func TestMacroToTimeFilter(t *testing.T) {
 	}{
 		{
 			name: "should return timefilter",
-			want: "toDateTime(intDiv(1447328726371,1000))",
+			want: "TO_TIMESTAMP(1447328726)",
 		},
 	}
 	for _, tt := range tests {
@@ -112,7 +112,7 @@ func TestMacroTimeInterval(t *testing.T) {
 	}
 	got, err := macros.TimeInterval(&query, []string{"col"})
 	assert.Nil(t, err)
-	assert.Equal(t, "toStartOfInterval(toDateTime(col), INTERVAL 20 second)", got)
+	assert.Equal(t, "TO_TIMESTAMP( TO_UNIX_TIMESTAMP(TO_TIMESTAMP(col)) // 20 * 20)", got)
 }
 
 func TestMacroTimeIntervalMs(t *testing.T) {
@@ -122,7 +122,7 @@ func TestMacroTimeIntervalMs(t *testing.T) {
 	}
 	got, err := macros.TimeIntervalMs(&query, []string{"col"})
 	assert.Nil(t, err)
-	assert.Equal(t, "toStartOfInterval(toDateTime64(col, 3), INTERVAL 20000 millisecond)", got)
+	assert.Equal(t, "TO_TIMESTAMP( TO_UNIX_TIMESTAMP(TO_TIMESTAMP(col)) // 20 * 20)", got)
 }
 
 func TestMacroIntervalSeconds(t *testing.T) {
@@ -135,7 +135,6 @@ func TestMacroIntervalSeconds(t *testing.T) {
 	assert.Equal(t, "20", got)
 }
 
-// test sqlds query interpolation with clickhouse filters used
 func TestInterpolate(t *testing.T) {
 	from, _ := time.Parse("2006-01-02T15:04:05.000Z", "2014-11-12T11:45:26.371Z")
 	to, _ := time.Parse("2006-01-02T15:04:05.000Z", "2015-11-12T11:45:26.371Z")
@@ -150,10 +149,10 @@ func TestInterpolate(t *testing.T) {
 	}
 
 	tests := []test{
-		{input: "select * from foo where $__timeFilter(cast(sth as timestamp))", output: "select * from foo where cast(sth as timestamp) >= '1415792726' AND cast(sth as timestamp) <= '1447328726'", name: "clickhouse timeFilter"},
-		{input: "select * from foo where $__timeFilter(cast(sth as timestamp) )", output: "select * from foo where cast(sth as timestamp) >= '1415792726' AND cast(sth as timestamp) <= '1447328726'", name: "clickhouse timeFilter with empty spaces"},
-		{input: "select * from foo where ( date >= $__fromTime and date <= $__toTime ) limit 100", output: "select * from foo where ( date >= toDateTime(intDiv(1415792726371,1000)) and date <= toDateTime(intDiv(1447328726371,1000)) ) limit 100", name: "clickhouse fromTime and toTime"},
-		{input: "select * from foo where ( date >= $__fromTime ) and ( date <= $__toTime ) limit 100", output: "select * from foo where ( date >= toDateTime(intDiv(1415792726371,1000)) ) and ( date <= toDateTime(intDiv(1447328726371,1000)) ) limit 100", name: "clickhouse fromTime and toTime inside a complex clauses"},
+		{input: "select * from foo where $__timeFilter(cast(sth as timestamp))", output: "select * from foo where cast(sth as timestamp) >= '1415792726' AND cast(sth as timestamp) <= '1447328726'", name: "databend timeFilter"},
+		{input: "select * from foo where $__timeFilter(cast(sth as timestamp) )", output: "select * from foo where cast(sth as timestamp) >= '1415792726' AND cast(sth as timestamp) <= '1447328726'", name: "databend timeFilter with empty spaces"},
+		{input: "select * from foo where ( date >= $__fromTime and date <= $__toTime ) limit 100", output: "select * from foo where ( date >= TO_TIMESTAMP(1415792726) and date <= TO_TIMESTAMP(1447328726) ) limit 100", name: "databend fromTime and toTime"},
+		{input: "select * from foo where ( date >= $__fromTime ) and ( date <= $__toTime ) limit 100", output: "select * from foo where ( date >= TO_TIMESTAMP(1415792726) ) and ( date <= TO_TIMESTAMP(1447328726) ) limit 100", name: "databend fromTime and toTime inside a complex clauses"},
 	}
 
 	for i, tc := range tests {

@@ -6,13 +6,12 @@ import (
 	"encoding/json"
 	"fmt"
 	"strconv"
-	"strings"
 	"time"
 
 	godatabend "github.com/databendcloud/databend-go"
 
-	"github.com/grafana/clickhouse-datasource/pkg/converters"
-	"github.com/grafana/clickhouse-datasource/pkg/macros"
+	"github.com/cadl/grafana-databend-datasource/pkg/converters"
+	"github.com/cadl/grafana-databend-datasource/pkg/macros"
 	"github.com/grafana/grafana-plugin-sdk-go/backend"
 	"github.com/grafana/grafana-plugin-sdk-go/backend/log"
 	"github.com/grafana/grafana-plugin-sdk-go/data"
@@ -21,28 +20,16 @@ import (
 	"github.com/pkg/errors"
 )
 
-// Clickhouse defines how to connect to a Clickhouse datasource
-// type Clickhouse struct{}
-
-type Databend struct{}
+type Databend struct {
+	EnableLogsMapFieldFlatten bool
+}
 
 func (d *Databend) Connect(config backend.DataSourceInstanceSettings, message json.RawMessage) (*sql.DB, error) {
 	settings, err := LoadSettings(config)
 	if err != nil {
 		return nil, err
 	}
-	// var tlsConfig *tls.Config
-
-	// if settings.TlsAuthWithCACert || settings.TlsClientAuth {
-	// 	tlsConfig, err = getTLSConfig(settings)
-	// 	if err != nil {
-	// 		return nil, err
-	// 	}
-	// } else if settings.Secure {
-	// 	tlsConfig = &tls.Config{
-	// 		InsecureSkipVerify: settings.InsecureSkipVerify,
-	// 	}
-	// }
+	d.EnableLogsMapFieldFlatten = settings.EnableLogsMapFieldFlatten
 	t, err := strconv.Atoi(settings.Timeout)
 	if err != nil {
 		return nil, errors.New(fmt.Sprintf("invalid timeout: %s", settings.Timeout))
@@ -51,40 +38,11 @@ func (d *Databend) Connect(config backend.DataSourceInstanceSettings, message js
 	if err != nil {
 		return nil, errors.New(fmt.Sprintf("invalid query timeout: %s", settings.QueryTimeout))
 	}
-	// protocol := clickhouse.Native
-	// if settings.Protocol == "http" {
-	// 	protocol = clickhouse.HTTP
-	// }
-	// compression := clickhouse.CompressionLZ4
-	// if protocol == clickhouse.HTTP {
-	// 	compression = clickhouse.CompressionGZIP
-	// }
-	// customSettings := make(clickhouse.Settings)
-	// if settings.CustomSettings != nil {
-	// 	for _, setting := range settings.CustomSettings {
-	// 		customSettings[setting.Setting] = setting.Value
-	// 	}
-	// }
+	tz, err := time.LoadLocation(settings.Timezone)
+	if err != nil {
+		return nil, errors.New(fmt.Sprintf("invalid timezone: %s", settings.Timezone))
+	}
 
-	// cfg := mysql.Config{
-	// 	User:                 settings.Username,
-	// 	Passwd:               settings.Password,
-	// 	Net:                  "tcp",
-	// 	Addr:                 fmt.Sprintf("%s:%d", settings.Server, settings.Port),
-	// 	DBName:               settings.DefaultDatabase,
-	// 	Timeout:              time.Duration(t) * time.Second,
-	// 	ReadTimeout:          time.Duration(qt) * time.Second,
-	// 	AllowNativePasswords: true,
-	// 	Collation:            "utf8mb4_general_ci",
-	// 	ParseTime:            true,
-	// 	Loc:                  time.Local,
-	// 	Params: map[string]string{
-	// 		"timezone": "'Asia/Shanghai'",
-	// 	},
-	// 	// TLS:         tlsConfig,
-	// }
-
-	// connector, err := mysql.NewConnector(&cfg)
 	cfg := godatabend.Config{
 		Host:         fmt.Sprintf("%s:%d", settings.Server, settings.Port),
 		User:         settings.Username,
@@ -93,7 +51,7 @@ func (d *Databend) Connect(config backend.DataSourceInstanceSettings, message js
 		SSLMode:      godatabend.SSL_MODE_DISABLE,
 		Timeout:      time.Duration(t) * time.Second,
 		WaitTimeSecs: int64(qt),
-		Location:     time.Local,
+		Location:     tz,
 	}
 
 	db, err := sql.Open("databend", cfg.FormatDSN())
@@ -127,7 +85,7 @@ func (d *Databend) Connect(config backend.DataSourceInstanceSettings, message js
 
 func (d *Databend) Converters() []sqlutil.Converter {
 	// todo: replace converters
-	return converters.ClickhouseConverters
+	return converters.DatabendConverters
 }
 
 func (d *Databend) Macros() sqlds.Macros {
@@ -285,7 +243,7 @@ func flattenDFKvField(field *data.Field) ([]*data.Field, error) {
 func (d *Databend) MutateResponse(ctx context.Context, res data.Frames) (data.Frames, error) {
 	newRes := make(data.Frames, 0, len(res))
 	for _, frame := range res {
-		if frame.Meta.PreferredVisualization == data.VisType(data.VisTypeLogs) {
+		if frame.Meta.PreferredVisualization == data.VisType(data.VisTypeLogs) && d.EnableLogsMapFieldFlatten {
 			// newFrame := data.NewFrame(frame.Name)
 			var newFields []*data.Field
 
@@ -307,30 +265,4 @@ func (d *Databend) MutateResponse(ctx context.Context, res data.Frames) (data.Fr
 		}
 	}
 	return newRes, nil
-}
-
-func CheckMinServerVersion(conn *sql.DB, major, minor, patch uint64) (bool, error) {
-	var version struct {
-		Major uint64
-		Minor uint64
-		Patch uint64
-	}
-	var res string
-	if err := conn.QueryRow("SELECT version()").Scan(&res); err != nil {
-		return false, err
-	}
-	for i, v := range strings.Split(res, ".") {
-		switch i {
-		case 0:
-			version.Major, _ = strconv.ParseUint(v, 10, 64)
-		case 1:
-			version.Minor, _ = strconv.ParseUint(v, 10, 64)
-		case 2:
-			version.Patch, _ = strconv.ParseUint(v, 10, 64)
-		}
-	}
-	if version.Major < major || (version.Major == major && version.Minor < minor) || (version.Major == major && version.Minor == minor && version.Patch < patch) {
-		return false, nil
-	}
-	return true, nil
 }

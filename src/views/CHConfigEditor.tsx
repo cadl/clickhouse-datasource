@@ -8,7 +8,6 @@ import {
   Button,
   InlineFormLabel,
   LegacyForms,
-  RadioButtonGroup,
   useTheme,
   Switch,
   InlineFieldRow,
@@ -17,9 +16,7 @@ import {
 } from '@grafana/ui';
 import { CertificationKey } from '../components/ui/CertificationKey';
 import { Components } from './../selectors';
-import { config } from '@grafana/runtime';
-import { CHConfig, CHCustomSetting, CHSecureConfig, Protocol } from './../types';
-import { gte } from 'semver';
+import { CHConfig, CHCustomSetting, CHSecureConfig } from './../types';
 
 export interface Props extends DataSourcePluginOptionsEditorProps<CHConfig> {}
 
@@ -32,10 +29,6 @@ export const ConfigEditor: React.FC<Props> = (props) => {
   const hasTLSCACert = secureJsonFields && secureJsonFields.tlsCACert;
   const hasTLSClientCert = secureJsonFields && secureJsonFields.tlsClientCert;
   const hasTLSClientKey = secureJsonFields && secureJsonFields.tlsClientKey;
-  const protocolOptions = [
-    { label: 'Native', value: Protocol.NATIVE },
-    { label: 'HTTP', value: Protocol.HTTP },
-  ];
   const switchContainerStyle: React.CSSProperties = {
     padding: `0 ${theme.spacing.sm}`,
     height: `${theme.spacing.formInputHeight}px`,
@@ -63,22 +56,12 @@ export const ConfigEditor: React.FC<Props> = (props) => {
       },
     });
   };
-  const onSwitchToggle = (key: keyof Pick<CHConfig, 'secure' | 'validate' | 'enableSecureSocksProxy'>, value: boolean) => {
+  const onSwitchToggle = (key: keyof Pick<CHConfig, 'validate' | 'enableSecureSocksProxy' | 'enableLogsMapFieldFlatten'>, value: boolean) => {
     onOptionsChange({
       ...options,
       jsonData: {
         ...options.jsonData,
         [key]: value,
-      },
-    });
-  };
-
-  const onProtocolToggle = (protocol: Protocol) => {
-    onOptionsChange({
-      ...options,
-      jsonData: {
-        ...options.jsonData,
-        protocol: protocol,
       },
     });
   };
@@ -158,33 +141,9 @@ export const ConfigEditor: React.FC<Props> = (props) => {
             onChange={(e) => onPortChange(e.currentTarget.value)}
             label={Components.ConfigEditor.ServerPort.label}
             aria-label={Components.ConfigEditor.ServerPort.label}
-            placeholder={Components.ConfigEditor.ServerPort.placeholder(jsonData.secure?.toString() || 'false')}
+            placeholder={Components.ConfigEditor.ServerPort.placeholder}
             tooltip={Components.ConfigEditor.ServerPort.tooltip}
           />
-        </div>
-        <div className="gf-form">
-          <InlineFormLabel width={13} tooltip={Components.ConfigEditor.Protocol.tooltip}>
-            {Components.ConfigEditor.Protocol.label}
-          </InlineFormLabel>
-          <RadioButtonGroup<Protocol>
-            options={protocolOptions}
-            disabledOptions={[]}
-            value={jsonData.protocol || Protocol.NATIVE}
-            onChange={(e) => onProtocolToggle(e!)}
-          />
-        </div>
-        <div className="gf-form">
-          <InlineFormLabel width={13} tooltip={Components.ConfigEditor.Secure.tooltip}>
-            {Components.ConfigEditor.Secure.label}
-          </InlineFormLabel>
-          <div style={switchContainerStyle}>
-            <Switch
-              id="secure"
-              className="gf-form"
-              value={jsonData.secure || false}
-              onChange={(e) => onSwitchToggle('secure', e.currentTarget.checked)}
-            />
-          </div>
         </div>
       </div>
       <div className="gf-form-group">
@@ -327,6 +286,31 @@ export const ConfigEditor: React.FC<Props> = (props) => {
           />
         </div>
         <div className="gf-form">
+        <FormField
+            labelWidth={13}
+            inputWidth={20}
+            value={jsonData.timezone || 'Asia/Shanghai'}
+            onChange={onUpdateDatasourceJsonDataOption(props, 'timezone')}
+            label={Components.ConfigEditor.Timezone.label}
+            aria-label={Components.ConfigEditor.Timezone.label}
+            placeholder={Components.ConfigEditor.Timezone.placeholder}
+            tooltip={Components.ConfigEditor.Timezone.tooltip}
+            type="text"
+          />
+        </div>
+        <div className="gf-form">
+          <InlineFormLabel width={13} tooltip={Components.ConfigEditor.EnableLogsMapFieldFlatten.tooltip}>
+            {Components.ConfigEditor.EnableLogsMapFieldFlatten.label}
+          </InlineFormLabel>
+          <div style={switchContainerStyle}>
+            <Switch
+              className="gf-form"
+              value={jsonData.enableLogsMapFieldFlatten || false}
+              onChange={(e) => onSwitchToggle('enableLogsMapFieldFlatten', e.currentTarget.checked)}
+            />
+          </div>
+        </div>
+        <div className="gf-form">
           <InlineFormLabel width={13} tooltip={Components.ConfigEditor.Validate.tooltip}>
             {Components.ConfigEditor.Validate.label}
           </InlineFormLabel>
@@ -338,20 +322,6 @@ export const ConfigEditor: React.FC<Props> = (props) => {
             />
           </div>
         </div>
-        {config.featureToggles['secureSocksDSProxyEnabled'] && gte(config.buildInfo.version, '10.0.0') && (
-          <div className="gf-form">
-            <InlineFormLabel width={13} tooltip={Components.ConfigEditor.SecureSocksProxy.tooltip}>
-              {Components.ConfigEditor.SecureSocksProxy.label}
-            </InlineFormLabel>
-            <div style={switchContainerStyle}>
-              <Switch
-                className="gf-form"
-                value={jsonData.enableSecureSocksProxy || false}
-                onChange={(e) => onSwitchToggle('enableSecureSocksProxy', e.currentTarget.checked)}
-              />
-            </div>
-          </div>
-        )}
       </div>
       <div className="gf-form-group">
         <h3>Custom Settings</h3>

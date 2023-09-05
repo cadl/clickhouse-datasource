@@ -43,7 +43,7 @@ const createInstance = ({ queryResponse }: Partial<InstanceConfig> = {}) => {
   return instance;
 };
 
-describe('ClickHouseDatasource', () => {
+describe('DatabendDatasource', () => {
   describe('metricFindQuery', () => {
     it('fetches values', async () => {
       const mockedValues = [1, 100];
@@ -103,7 +103,7 @@ describe('ClickHouseDatasource', () => {
 
   describe('Tag Keys', () => {
     it('should Fetch Default Tags When No Second AdHoc Variable', async () => {
-      const spyOnReplace = jest.spyOn(templateSrvMock, 'replace').mockImplementation(() => '$clickhouse_adhoc_query');
+      const spyOnReplace = jest.spyOn(templateSrvMock, 'replace').mockImplementation(() => '$databend_adhoc_query');
       const ds = cloneDeep(mockDatasource);
       ds.settings.jsonData.defaultDatabase = undefined;
       const frame = new ArrayDataFrame([{ name: 'foo', type: 'string', table: 'table' }]);
@@ -121,7 +121,7 @@ describe('ClickHouseDatasource', () => {
     });
 
     it('should Fetch Tags With Default Database', async () => {
-      const spyOnReplace = jest.spyOn(templateSrvMock, 'replace').mockImplementation(() => '$clickhouse_adhoc_query');
+      const spyOnReplace = jest.spyOn(templateSrvMock, 'replace').mockImplementation(() => '$databend_adhoc_query');
       const frame = new ArrayDataFrame([{ name: 'foo', type: 'string', table: 'table' }]);
       const ds = cloneDeep(mockDatasource);
       const spyOnQuery = jest.spyOn(ds, 'query').mockImplementation((_request) => of({ data: [frame] }));
@@ -189,7 +189,7 @@ describe('ClickHouseDatasource', () => {
 
   describe('Tag Values', () => {
     it('should Fetch Tag Values from Schema', async () => {
-      const spyOnReplace = jest.spyOn(templateSrvMock, 'replace').mockImplementation(() => '$clickhouse_adhoc_query');
+      const spyOnReplace = jest.spyOn(templateSrvMock, 'replace').mockImplementation(() => '$databend_adhoc_query');
       const ds = cloneDeep(mockDatasource);
       ds.settings.jsonData.defaultDatabase = undefined;
       const frame = new ArrayDataFrame([{ bar: 'foo' }]);

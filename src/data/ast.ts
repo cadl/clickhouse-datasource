@@ -69,8 +69,6 @@ export function getTable(sql: string): string {
     case 'table': {
       const table = stm.from![0];
       const tableName = `${table.name.schema ? `${table.name.schema}.` : ''}${table.name.name}`;
-      // clickhouse table names are case-sensitive and pgsql parser removes casing,
-      // so we need to get the casing from the raw sql
       const s = new RegExp(`\\b${tableName}\\b`, 'gi').exec(sql);
       return s ? s[0] : tableName;
     }
@@ -87,7 +85,7 @@ export function getFields(sql: string): string[] {
   if (stm.type !== 'select' || !stm.columns?.length || stm.columns?.length <= 0) {
     return [];
   }
-  
+
   return stm.columns.map((x) => {
     const exprName = (x.expr as ExprRef).name
 

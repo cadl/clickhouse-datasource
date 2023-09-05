@@ -7,7 +7,7 @@ import { uuidv4 } from 'https://jslib.k6.io/k6-utils/1.4.0/index.js';
 import { selectors } from 'https://unpkg.com/@grafana/e2e-selectors@9.4.3/dist/index.js';
 
 const DASHBOARD_TITLE = `e2e-test-dashboard-${uuidv4()}`;
-const DATASOURCE_NAME = `ClickHouse-e2e-test-${uuidv4()}`;
+const DATASOURCE_NAME = `Databend-e2e-test-${uuidv4()}`;
 let datasourceUID;
 let apiToken;
 const getDashboardUid = (url) => {
@@ -38,16 +38,16 @@ export async function login(page) {
     });
   } catch (e) {
     fail(`login failed: ${e}`);
-  } 
+  }
 };
 
 export async function addDatasource(page) {
   try {
     const addDataSourceURL = selectors.pages.AddDataSource.url;
     await page.goto(`http://localhost:3000${addDataSourceURL}`, { waitUntil: 'networkidle' });
-    
-    const clickHouseDataSource = page.locator(`button[aria-label="${selectors.pages.AddDataSource.dataSourcePluginsV2('ClickHouse')}"]`);
-    await clickHouseDataSource.click();
+
+    const databendDataSource = page.locator(`button[aria-label="${selectors.pages.AddDataSource.dataSourcePluginsV2('Databend')}"]`);
+    await databendDataSource.click();
     const dataSourceName = page.locator(`input[aria-label="${selectors.pages.DataSource.name}"]`);
     dataSourceName.fill('');
     dataSourceName.type(`${DATASOURCE_NAME}`);
@@ -76,7 +76,7 @@ export async function addDashboard(page) {
   try {
     const addDashboardURL = selectors.pages.AddDashboard.url;
     await page.goto(`http://localhost:3000${addDashboardURL}`, { waitUntil: 'networkidle' });
-    
+
     const saveDashboardToolbarButton = page.locator(`button[aria-label="${selectors.components.PageToolbar.item('Save dashboard')}"]`);
     await saveDashboardToolbarButton.click();
     const dashboardTitleInput = page.locator(`input[aria-label="${selectors.pages.SaveDashboardAsModal.newName}"]`);
@@ -92,7 +92,7 @@ export async function addDashboard(page) {
     })
   } catch(e) {
     fail(`add dashboard failed: ${e}`);
-  } 
+  }
 };
 
 export async function configurePanel(page) {
@@ -111,7 +111,7 @@ export async function configurePanel(page) {
       "queries": [
           {
               "datasource": {
-                  "type": "grafana-clickhouse-datasource",
+                  "type": "grafana-databend-datasource",
                   "uid": `${datasourceUID}`
               },
               "builderOptions": {
@@ -195,7 +195,7 @@ export async function configurePanel(page) {
 
     const apiKeyName = `apikey-${uuidv4()}`
 
-    // creates API token 
+    // creates API token
     const getApiToken = http.post('http://admin:admin@localhost:3000/api/auth/keys', `{"name":"${apiKeyName}", "role": "Admin", "secondsToLive": 600 }`, {
       headers: { 'Content-Type': 'application/json' },
     });
@@ -213,7 +213,7 @@ export async function configurePanel(page) {
     })
   } catch(e) {
     fail(`run query failed: ${e}`);
-  } 
+  }
 };
 
 export async function removeDashboard(browser, page) {
@@ -221,7 +221,7 @@ export async function removeDashboard(browser, page) {
     const dashboardURL = page.url();
     const dashboardUID = getDashboardUid(dashboardURL);
     await page.goto(`http://localhost:3000/d/${dashboardUID}`, { waitUntil: 'networkidle' });
-    
+
     const dashboardSettings = page.locator(`button[aria-label="${selectors.components.PageToolbar.item('Dashboard settings')}"]`);
     await dashboardSettings.click();
     const deleteDashboardButton = page.locator(`button[aria-label="${selectors.pages.Dashboard.Settings.General.deleteDashBoard}"]`);

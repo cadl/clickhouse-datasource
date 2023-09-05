@@ -40,7 +40,7 @@ export class AdHocFilter {
         const key = f.key.includes('.') ? f.key.split('.')[1] : f.key;
         const value = isNaN(Number(f.value)) ? `\\'${f.value}\\'` : Number(f.value);
         const condition = i !== adHocFilters.length - 1 ? (f.condition ? f.condition : 'AND') : '';
-        const operator = convertOperatorToClickHouseOperator(f.operator);
+        const operator = convertOperatorToDatabendOperator(f.operator);
         return ` ${key} ${operator} ${value} ${condition}`;
       })
       .join('');
@@ -58,9 +58,9 @@ function isValid(filter: AdHocVariableFilter): boolean {
   return filter.key !== undefined && filter.operator !== undefined && filter.value !== undefined;
 }
 
-function convertOperatorToClickHouseOperator(operator: AdHocVariableFilterOperator): string {
-  if (operator === '=~') {return 'ILIKE';}
-  if (operator === '!~') {return 'NOT ILIKE';}
+function convertOperatorToDatabendOperator(operator: AdHocVariableFilterOperator): string {
+  if (operator === '=~') {return 'LIKE';}
+  if (operator === '!~') {return 'NOT LIKE';}
   return operator;
 }
 
