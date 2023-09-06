@@ -26,7 +26,10 @@ jobs:
       - name: Build frontend
         run: yarn build
       - name: Build backend
-        run: mage build:backend
+        uses: magefile/mage-action@v2
+        with:
+          version: latest
+          args: buildAll
       - name: Get plugin metadata
         id: metadata
         run: |
