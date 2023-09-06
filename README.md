@@ -1,13 +1,15 @@
 # Databend data source for Grafana
 
-
 This project was forked from [grafana/clickhouse-datasource](https://github.com/grafana/clickhouse-datasource), and is based on clickhouse-datasource version 3.3.0, with adaptations made for databend. Thanks to grafana/clickhouse-datasource for the original project.
 
+<img src="https://github.com/cadl/grafana-databend-datasource/assets/1629582/191da5c9-0805-4ca3-b63a-eb3e71b8e97c" width=200>
+<img src="https://github.com/cadl/grafana-databend-datasource/assets/1629582/5c99cdfc-9fc0-45ba-ab2d-6822e647f19c" width=200>
 
 ## Installation
 
 For detailed instructions on how to install the plugin on Grafana Cloud or
 locally, please checkout the [Plugin installation docs](https://grafana.com/docs/grafana/latest/plugins/installation/).
+
 
 ## Configuration
 
