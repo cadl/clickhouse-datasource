@@ -38,7 +38,7 @@ export class AdHocFilter {
       })
       .map((f, i) => {
         const key = f.key.includes('.') ? f.key.split('.')[1] : f.key;
-        const value = isNaN(Number(f.value)) ? `\\'${f.value}\\'` : Number(f.value);
+        const value = isNaN(Number(f.value)) ? `'${f.value}'` : Number(f.value);
         const condition = i !== adHocFilters.length - 1 ? (f.condition ? f.condition : 'AND') : '';
         const operator = convertOperatorToDatabendOperator(f.operator);
         return ` ${key} ${operator} ${value} ${condition}`;
@@ -48,9 +48,13 @@ export class AdHocFilter {
     if(filters === '') {
       return sql;
     }
+
+    // attach the filters to the query
+    const condition = sql.match(/WHERE/i) ? 'AND' : '';
+    const re = new RegExp(`("${this._targetTable}") (WHERE)`, 'g');
+    sql = sql.replace(re, `$1 WHERE (${filters}) ${condition}`);
     // Semicolons are not required and cause problems when building the SQL
-    sql = sql.replace(';', '');
-    return `${sql} settings additional_table_filters={'${this._targetTable}' : '${filters}'}`;
+    return sql
   }
 }
 
